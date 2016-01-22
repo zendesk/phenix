@@ -1,0 +1,7 @@
+development:
+  adapter: mysql2
+  encoding: utf8
+  database: phenix_database_1
+  username: root
+  password:
+  host: localhost

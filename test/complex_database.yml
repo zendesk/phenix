@@ -1,0 +1,17 @@
+<% mysql = URI(ENV['MYSQL_URL'] || 'mysql://root@127.0.0.1:3306') %>
+
+mysql: &MYSQL
+  encoding: utf8
+  adapter: mysql2
+  username: <%= mysql.user %>
+  host: <%= mysql.host %>
+  port: <%= mysql.port %>
+  password: <%= mysql.password %>
+
+database2:
+  <<: *MYSQL
+  database: phenix_database_2
+
+database3:
+  <<: *MYSQL
+  database: phenix_database_3
