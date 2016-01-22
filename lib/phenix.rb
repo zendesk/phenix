@@ -16,7 +16,7 @@ module Phenix
 
   def load_database_config(config_path = Phenix.database_config_path)
     config_content = IO.read(config_path)
-    config_content = ERB.new(config_content).result if config_content.include?('<%')
+    config_content = ERB.new(config_content).result
     ActiveRecord::Base.configurations = Phenix.current_configuration = YAML.load(config_content)
   end
 
