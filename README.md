@@ -27,6 +27,8 @@ Or install it yourself as:
   Phenix.configure do |config| # do not pass any block if you just want the defaults
     config.database_config_path = '/my/path/database.yml' # defaults to 'test/database.yml'
     config.schema_path          = 'my/path/schema.rb'     # defaults to 'test/schema.rb'
+
+    config.skip_database = ->(name, conf) { name =~ /do_not_create/ } # define this lambda if you want to skip the creation of some databases
   end
 
   # in your test file

@@ -9,6 +9,9 @@ describe Phenix do
   let(:simple_database_path)  { File.join(test_directory, 'simple_database.yml') }
   let(:complex_database_path) { File.join(test_directory, 'complex_database.yml') }
 
+  let(:exists_method)  { (ActiveRecord::VERSION::MAJOR < 5 ? :table_exists? : :data_source_exists?) }
+  let(:database_error) { (ActiveRecord::VERSION::MAJOR < 4 ? Mysql2::Error : ActiveRecord::NoDatabaseError) }
+
   it 'has a version number' do
     expect(Phenix::VERSION).not_to be nil
   end
@@ -70,7 +73,7 @@ describe Phenix do
 
     it 'creates the databases' do
       ActiveRecord::Base.establish_connection(:database2)
-      expect { ActiveRecord::Base.connection }.to raise_error(ActiveRecord::VERSION::MAJOR < 4 ? Mysql2::Error : ActiveRecord::NoDatabaseError)
+      expect { ActiveRecord::Base.connection }.to raise_error(database_error)
 
       create_databases
 
@@ -94,8 +97,6 @@ describe Phenix do
       drop_databases
     end
 
-    let(:exists_method) { (ActiveRecord::VERSION::MAJOR < 5 ? :table_exists? : :data_source_exists?) }
-
     it 'creates the databases and adds the tables from the schema' do
       create_and_populate_databases
 
@@ -111,13 +112,34 @@ describe Phenix do
       Phenix.rise!(config_path: complex_database_path)
     end
 
-    let(:exists_method) { (ActiveRecord::VERSION::MAJOR < 5 ? :table_exists? : :data_source_exists?) }
-
     it 'creates the databases and adds the tables from the schema' do
       %i{database2 database3}.each do |name|
         ActiveRecord::Base.establish_connection(name)
         expect(ActiveRecord::Base.connection.send(exists_method, 'tests')).to be true
       end
+    end
+
+    after do
+      Phenix.burn!
+    end
+  end
+
+  describe :skip_database do
+    before do
+      Phenix.configure do |config|
+        config.database_config_path = complex_database_path
+        config.skip_database = ->(name, _conf) { name == 'database3' }
+      end
+      Phenix.rise!
+    end
+
+    it 'uses the skip_database lamba when creating databases' do
+      ActiveRecord::Base.establish_connection(:database2)
+      current_database = ActiveRecord::Base.connection.select_value('select DATABASE()')
+      expect(current_database).to eq('phenix_database_2')
+
+      ActiveRecord::Base.establish_connection(:database3)
+      expect { ActiveRecord::Base.connection }.to raise_error(database_error)
     end
 
     after do

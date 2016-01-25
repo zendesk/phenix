@@ -3,12 +3,13 @@ require 'erb'
 
 module Phenix
   class << self
-    attr_accessor :database_config_path, :schema_path
+    attr_accessor :database_config_path, :schema_path, :skip_database
     attr_accessor :current_configuration
 
     def configure
       self.database_config_path = File.join(Dir.pwd, 'test', 'database.yml')
       self.schema_path          = File.join(Dir.pwd, 'test', 'schema.rb')
+      self.skip_database        = ->(_, _) { false }
 
       yield(self) if block_given?
     end
@@ -57,7 +58,7 @@ module Phenix
   def for_each_database
     Phenix.current_configuration.each do |name, conf|
       next if conf['database'].nil?
-      next if respond_to?(:skip_database?) && skip_database?(name, conf)
+      next if Phenix.skip_database.call(name, conf)
       yield(name, conf)
     end
   end
