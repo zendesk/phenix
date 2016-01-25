@@ -53,7 +53,7 @@ module Phenix
   end
 
   def for_each_database
-    Phenix.current_configuration.each do |name, conf|
+    ActiveRecord::Base.configurations.each do |name, conf|
       next if conf['database'].nil?
       next if Phenix.skip_database.call(name, conf)
       yield(name, conf)
