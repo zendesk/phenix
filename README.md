@@ -24,22 +24,20 @@ Or install it yourself as:
 
 ```ruby
   # helper.rb
-  Phenix.configure do |config|
+  Phenix.configure do |config| # do not pass any block if you just want the defaults
     config.database_config_path = '/my/path/database.yml' # defaults to 'test/database.yml'
-    config.schema_config_path   = 'my/path/schema.rb'     # defaults to 'test/schema.rb'
+    config.schema_path          = 'my/path/schema.rb'     # defaults to 'test/schema.rb'
+
+    config.skip_database = ->(name, conf) { name =~ /do_not_create/ } # define this lambda if you want to skip the creation of some databases
   end
 
   # in your test file
-  include Phenix
-
   before do
-    load_database_config
-    create_databases # use this one if you just want the databases
-    create_and_populate_databases # use this one if you also want to use the schema
+    Phenix.rise! # pass with_schema: true if you want the schema populated as well
   end
 
   after do
-    drop_databases
+    Phenix.burn!
   end
 ```
 

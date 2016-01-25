@@ -3,15 +3,26 @@ require 'erb'
 
 module Phenix
   class << self
-    attr_accessor :database_config_path, :schema_config_path
+    attr_accessor :database_config_path, :schema_path, :skip_database
     attr_accessor :current_configuration
 
     def configure
-      self.database_config_path = File.join(Bundler.root, 'test', 'database.yml')
-      self.schema_config_path   = File.join(Bundler.root, 'test', 'schema.rb')
+      self.database_config_path = File.join(Dir.pwd, 'test', 'database.yml')
+      self.schema_path          = File.join(Dir.pwd, 'test', 'schema.rb')
+      self.skip_database        = ->(_, _) { false }
 
       yield(self) if block_given?
     end
+  end
+
+  def rise!(with_schema: true, config_path: Phenix.database_config_path)
+    load_database_config(config_path)
+    drop_databases
+    create_databases(with_schema)
+  end
+
+  def burn!
+    drop_databases
   end
 
   def load_database_config(config_path = Phenix.database_config_path)
@@ -20,20 +31,19 @@ module Phenix
     ActiveRecord::Base.configurations = Phenix.current_configuration = YAML.load(yaml_config)
   end
 
-  def create_databases
+  private
+
+  def create_databases(with_schema)
     for_each_database do |name, conf|
       run_mysql_command(conf, "CREATE DATABASE #{conf['database']}")
       ActiveRecord::Base.establish_connection(name.to_sym)
-      yield if block_given?
+      populate_database if with_schema
     end
   end
 
-  def create_and_populate_databases
-    create_databases do
-      ActiveRecord::Migration.verbose = false
-      load(Phenix.schema_config_path)
-      yield if block_given?
-    end
+  def populate_database
+    ActiveRecord::Migration.verbose = false
+    load(Phenix.schema_path)
   end
 
   def drop_databases
@@ -42,12 +52,10 @@ module Phenix
     end
   end
 
-  private
-
   def for_each_database
     Phenix.current_configuration.each do |name, conf|
       next if conf['database'].nil?
-      next if respond_to?(:skip_database?) && skip_database?(name, conf)
+      next if Phenix.skip_database.call(name, conf)
       yield(name, conf)
     end
   end
@@ -65,4 +73,6 @@ module Phenix
     end
     `echo "#{command}" | #{@mysql_command}`
   end
+
+  extend self
 end
