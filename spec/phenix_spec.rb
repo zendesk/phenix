@@ -63,46 +63,48 @@ describe Phenix do
   end
 
   describe :create_databases do
-    before do
-      load_database_config(complex_database_path)
-    end
+    describe :without_schema do
+      before do
+        load_database_config(complex_database_path)
+      end
 
-    after do
-      drop_databases
-    end
+      after do
+        drop_databases
+      end
 
-    it 'creates the databases' do
-      ActiveRecord::Base.establish_connection(:database2)
-      expect { ActiveRecord::Base.connection }.to raise_error(database_error)
+      it 'creates the databases' do
+        ActiveRecord::Base.establish_connection(:database2)
+        expect { ActiveRecord::Base.connection }.to raise_error(database_error)
 
-      create_databases
+        create_databases(false)
 
-      { database2: 'phenix_database_2', database3: 'phenix_database_3'}.each do |name, database|
-        ActiveRecord::Base.establish_connection(name)
-        current_database = ActiveRecord::Base.connection.select_value('select DATABASE()')
-        expect(current_database).to eq(database)
+        { database2: 'phenix_database_2', database3: 'phenix_database_3'}.each do |name, database|
+          ActiveRecord::Base.establish_connection(name)
+          current_database = ActiveRecord::Base.connection.select_value('select DATABASE()')
+          expect(current_database).to eq(database)
+        end
       end
     end
-  end
 
-  describe :create_and_populate_databases do
-    before do
-      Phenix.configure do |config|
-        config.database_config_path = complex_database_path
+    describe :with_schema do
+      before do
+        Phenix.configure do |config|
+          config.database_config_path = complex_database_path
+        end
+        load_database_config(complex_database_path)
       end
-      load_database_config(complex_database_path)
-    end
 
-    after do
-      drop_databases
-    end
+      after do
+        drop_databases
+      end
 
-    it 'creates the databases and adds the tables from the schema' do
-      create_and_populate_databases
+      it 'creates the databases and adds the tables from the schema' do
+        create_databases(true)
 
-      %i{database2 database3}.each do |name|
-        ActiveRecord::Base.establish_connection(name)
-        expect(ActiveRecord::Base.connection.send(exists_method, 'tests')).to be true
+        %i{database2 database3}.each do |name|
+          ActiveRecord::Base.establish_connection(name)
+          expect(ActiveRecord::Base.connection.send(exists_method, 'tests')).to be true
+        end
       end
     end
   end

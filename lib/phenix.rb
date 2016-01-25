@@ -18,7 +18,7 @@ module Phenix
   def rise!(with_schema: true, config_path: Phenix.database_config_path)
     load_database_config(config_path)
     drop_databases
-    with_schema ? create_and_populate_databases : create_databases
+    create_databases(with_schema)
   end
 
   def burn!
@@ -33,20 +33,17 @@ module Phenix
 
   private
 
-  def create_databases
+  def create_databases(with_schema)
     for_each_database do |name, conf|
       run_mysql_command(conf, "CREATE DATABASE #{conf['database']}")
       ActiveRecord::Base.establish_connection(name.to_sym)
-      yield if block_given?
+      populate_database if with_schema
     end
   end
 
-  def create_and_populate_databases
-    create_databases do
-      ActiveRecord::Migration.verbose = false
-      load(Phenix.schema_path)
-      yield if block_given?
-    end
+  def populate_database
+    ActiveRecord::Migration.verbose = false
+    load(Phenix.schema_path)
   end
 
   def drop_databases
