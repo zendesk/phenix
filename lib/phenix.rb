@@ -3,15 +3,25 @@ require 'erb'
 
 module Phenix
   class << self
-    attr_accessor :database_config_path, :schema_config_path
+    attr_accessor :database_config_path, :schema_path
     attr_accessor :current_configuration
 
     def configure
-      self.database_config_path = File.join(Bundler.root, 'test', 'database.yml')
-      self.schema_config_path   = File.join(Bundler.root, 'test', 'schema.rb')
+      self.database_config_path = File.join(Dir.pwd, 'test', 'database.yml')
+      self.schema_path          = File.join(Dir.pwd, 'test', 'schema.rb')
 
       yield(self) if block_given?
     end
+  end
+
+  def rise!(with_schema: true, config_path: Phenix.database_config_path)
+    load_database_config(config_path)
+    drop_databases
+    with_schema ? create_and_populate_databases : create_databases
+  end
+
+  def burn!
+    drop_databases
   end
 
   def load_database_config(config_path = Phenix.database_config_path)
@@ -19,6 +29,8 @@ module Phenix
     yaml_config = ERB.new(erb_config).result
     ActiveRecord::Base.configurations = Phenix.current_configuration = YAML.load(yaml_config)
   end
+
+  private
 
   def create_databases
     for_each_database do |name, conf|
@@ -31,7 +43,7 @@ module Phenix
   def create_and_populate_databases
     create_databases do
       ActiveRecord::Migration.verbose = false
-      load(Phenix.schema_config_path)
+      load(Phenix.schema_path)
       yield if block_given?
     end
   end
@@ -41,8 +53,6 @@ module Phenix
       run_mysql_command(conf, "DROP DATABASE IF EXISTS #{conf['database']}")
     end
   end
-
-  private
 
   def for_each_database
     Phenix.current_configuration.each do |name, conf|
@@ -65,4 +75,6 @@ module Phenix
     end
     `echo "#{command}" | #{@mysql_command}`
   end
+
+  extend self
 end

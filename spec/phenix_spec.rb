@@ -8,7 +8,6 @@ describe Phenix do
 
   let(:simple_database_path)  { File.join(test_directory, 'simple_database.yml') }
   let(:complex_database_path) { File.join(test_directory, 'complex_database.yml') }
-  let(:schema_config_path)    { File.join(test_directory, 'schema.rb') }
 
   it 'has a version number' do
     expect(Phenix::VERSION).not_to be nil
@@ -18,17 +17,17 @@ describe Phenix do
     it 'sets default values' do
       Phenix.configure
       expect(Phenix.database_config_path).to match(%r{/test/database.yml})
-      expect(Phenix.schema_config_path)  .to match(%r{/test/schema.rb})
+      expect(Phenix.schema_path)         .to match(%r{/test/schema.rb})
     end
 
     it 'allows a block to configure' do
       Phenix.configure do |config|
         config.database_config_path = 'my/path/database.yml'
-        config.schema_config_path   = 'my/path/schema.rb'
+        config.schema_path          = 'my/path/schema.rb'
       end
 
       expect(Phenix.database_config_path).to eq('my/path/database.yml')
-      expect(Phenix.schema_config_path)  .to eq('my/path/schema.rb')
+      expect(Phenix.schema_path)         .to eq('my/path/schema.rb')
     end
   end
 
@@ -87,7 +86,6 @@ describe Phenix do
     before do
       Phenix.configure do |config|
         config.database_config_path = complex_database_path
-        config.schema_config_path   = schema_config_path
       end
       load_database_config(complex_database_path)
     end
@@ -105,6 +103,25 @@ describe Phenix do
         ActiveRecord::Base.establish_connection(name)
         expect(ActiveRecord::Base.connection.send(exists_method, 'tests')).to be true
       end
+    end
+  end
+
+  describe 'rise! and burn!' do
+    before do
+      Phenix.rise!(config_path: complex_database_path)
+    end
+
+    let(:exists_method) { (ActiveRecord::VERSION::MAJOR < 5 ? :table_exists? : :data_source_exists?) }
+
+    it 'creates the databases and adds the tables from the schema' do
+      %i{database2 database3}.each do |name|
+        ActiveRecord::Base.establish_connection(name)
+        expect(ActiveRecord::Base.connection.send(exists_method, 'tests')).to be true
+      end
+    end
+
+    after do
+      Phenix.burn!
     end
   end
 end
