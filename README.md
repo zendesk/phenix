@@ -33,7 +33,7 @@ Or install it yourself as:
 
   # in your test file
   before do
-    Phenix.rise! # pass with_schema: true if you want the schema populated as well
+    Phenix.rise! # pass with_schema: false if you don't want the schema loaded
   end
 
   after do
