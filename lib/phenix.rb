@@ -3,6 +3,13 @@ require 'phenix/version'
 require 'erb'
 
 module Phenix
+  CONFIG_TO_MYSQL_MAPPING = {
+    'username' => 'user',
+    'password' => 'password',
+    'port' => 'port',
+    'host' => 'host'
+  }.freeze
+
   class << self
     attr_accessor :database_config_path, :schema_path, :skip_database
     attr_accessor :current_configuration
@@ -36,15 +43,18 @@ module Phenix
 
   def create_databases(with_schema)
     for_each_database do |name, conf|
-      run_mysql_command(conf, "CREATE DATABASE #{conf['database']}")
+      run_mysql_command(conf, "CREATE DATABASE IF NOT EXISTS #{conf['database']}")
       ActiveRecord::Base.establish_connection(name.to_sym)
       populate_database if with_schema
     end
   end
 
   def populate_database
+    old = ActiveRecord::Migration.verbose
     ActiveRecord::Migration.verbose = false
     load(Phenix.schema_path)
+  ensure
+    ActiveRecord::Migration.verbose = old
   end
 
   def drop_databases
@@ -61,18 +71,21 @@ module Phenix
     end
   end
 
-  def run_mysql_command(conf, command)
-    @mysql_command ||= begin
-      commands = [
-        'mysql',
-        "--user=#{conf['username']}"
-      ]
-      commands << "--host=#{conf['host']}" if conf['host'].present?
-      commands << "--port=#{conf['port']}" if conf['port'].present?
-      commands << " --password=#{conf['password']} 2> /dev/null" if conf['password'].present?
-      commands.join(' ')
+  def run_mysql_command(config, execute)
+    command = ['mysql']
+    CONFIG_TO_MYSQL_MAPPING.each do |c, m|
+      if v = config[c].presence
+        command << "--#{m}" << v.to_s
+      end
     end
-    `echo "#{command}" | #{@mysql_command}`
+    command << "--execute"
+    command << execute
+
+    pio = IO.popen(command, err: '/dev/null')
+    result = pio.read
+    pio.close
+    raise "Failed to execute #{execute}" unless $?.success?
+    result
   end
 
   extend self

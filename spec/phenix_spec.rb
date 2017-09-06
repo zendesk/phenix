@@ -2,8 +2,25 @@
 require 'spec_helper'
 require 'active_record'
 
+SingleCov.covered!
+
 describe Phenix do
   include Phenix
+
+  def with_bad_mysql
+    Dir.mktmpdir do |dir|
+      file = "#{dir}/mysql"
+      File.write(file, "nope")
+      File.chmod 0777, file
+      begin
+        old = ENV['PATH']
+        ENV['PATH'] = "#{dir}:#{ENV['PATH']}"
+        yield
+      ensure
+        ENV['PATH'] = old
+      end
+    end
+  end
 
   let(:test_directory) { File.join(File.dirname(__FILE__), '..', 'test') }
 
@@ -13,13 +30,14 @@ describe Phenix do
   let(:exists_method)  { (ActiveRecord::VERSION::MAJOR < 5 ? :table_exists? : :data_source_exists?) }
   let(:database_error) { (ActiveRecord::VERSION::MAJOR < 4 ? Mysql2::Error : ActiveRecord::NoDatabaseError) }
 
+  before { Phenix.configure }
+
   it 'has a version number' do
     expect(Phenix::VERSION).not_to be nil
   end
 
   describe :configure do
     it 'sets default values' do
-      Phenix.configure
       expect(Phenix.database_config_path).to match(%r{/test/database.yml})
       expect(Phenix.schema_path)         .to match(%r{/test/schema.rb})
     end
@@ -85,6 +103,20 @@ describe Phenix do
           expect(current_database).to eq(database)
         end
       end
+
+      it 'does not fail when databases already existed' do
+        create_databases(false)
+        create_databases(false)
+      end
+
+      it 'fails when mysql fails' do
+        with_bad_mysql do
+          expect { create_databases(false) }.to raise_error(
+            RuntimeError,
+            "Failed to execute CREATE DATABASE IF NOT EXISTS phenix_database_2"
+          )
+        end
+      end
     end
 
     describe :with_schema do
@@ -107,6 +139,11 @@ describe Phenix do
           expect(ActiveRecord::Base.connection.send(exists_method, 'tests')).to be true
         end
       end
+
+      it 'resets verbose after' do
+        create_databases(true)
+        expect(ActiveRecord::Migration.verbose).to eq(true)
+      end
     end
   end
 
@@ -115,15 +152,15 @@ describe Phenix do
       Phenix.rise!(config_path: complex_database_path)
     end
 
+    after do
+      Phenix.burn!
+    end
+
     it 'creates the databases and adds the tables from the schema' do
       %i{database2 database3}.each do |name|
         ActiveRecord::Base.establish_connection(name)
         expect(ActiveRecord::Base.connection.send(exists_method, 'tests')).to be true
       end
-    end
-
-    after do
-      Phenix.burn!
     end
   end
 
@@ -136,6 +173,10 @@ describe Phenix do
       Phenix.rise!
     end
 
+    after do
+      Phenix.burn!
+    end
+
     it 'uses the skip_database lamba when creating databases' do
       ActiveRecord::Base.establish_connection(:database2)
       current_database = ActiveRecord::Base.connection.select_value('select DATABASE()')
@@ -143,10 +184,6 @@ describe Phenix do
 
       ActiveRecord::Base.establish_connection(:database3)
       expect { ActiveRecord::Base.connection }.to raise_error(database_error)
-    end
-
-    after do
-      Phenix.burn!
     end
   end
 end
