@@ -43,8 +43,11 @@ module Phenix
   end
 
   def populate_database
+    old = ActiveRecord::Migration.verbose
     ActiveRecord::Migration.verbose = false
     load(Phenix.schema_path)
+  ensure
+    ActiveRecord::Migration.verbose = old
   end
 
   def drop_databases

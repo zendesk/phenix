@@ -137,6 +137,11 @@ describe Phenix do
           expect(ActiveRecord::Base.connection.send(exists_method, 'tests')).to be true
         end
       end
+
+      it 'resets verbose after' do
+        create_databases(true)
+        expect(ActiveRecord::Migration.verbose).to eq(true)
+      end
     end
   end
 
