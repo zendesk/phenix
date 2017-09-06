@@ -3,6 +3,13 @@ require 'phenix/version'
 require 'erb'
 
 module Phenix
+  CONFIG_TO_MYSQL_MAPPING = {
+    'username' => 'user',
+    'password' => 'password',
+    'port' => 'port',
+    'host' => 'host'
+  }.freeze
+
   class << self
     attr_accessor :database_config_path, :schema_path, :skip_database
     attr_accessor :current_configuration
@@ -64,12 +71,13 @@ module Phenix
     end
   end
 
-  def run_mysql_command(conf, execute)
+  def run_mysql_command(config, execute)
     command = ['mysql']
-    command << "--user" << conf['username'].to_s if conf['username'].present?
-    command << "--host" << conf['host'].to_s if conf['host'].present?
-    command << "--port" << conf['port'].to_s if conf['port'].present?
-    command << "--password" << conf['password'].to_s if conf['password'].present?
+    CONFIG_TO_MYSQL_MAPPING.each do |c, m|
+      if v = config[c].presence
+        command << "--#{m}" << v.to_s
+      end
+    end
     command << "--execute"
     command << execute
 
