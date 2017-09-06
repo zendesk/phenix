@@ -2,6 +2,8 @@
 require 'spec_helper'
 require 'active_record'
 
+SingleCov.covered!
+
 describe Phenix do
   include Phenix
 

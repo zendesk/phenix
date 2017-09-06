@@ -20,4 +20,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'wwtd'
   s.add_development_dependency 'bump'
   s.add_development_dependency 'mysql2'
+  s.add_development_dependency 'single_cov'
 end
