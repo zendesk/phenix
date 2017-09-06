@@ -5,6 +5,21 @@ require 'active_record'
 describe Phenix do
   include Phenix
 
+  def with_bad_mysql
+    Dir.mktmpdir do |dir|
+      file = "#{dir}/mysql"
+      File.write(file, "nope")
+      File.chmod 0777, file
+      begin
+        old = ENV['PATH']
+        ENV['PATH'] = "#{dir}:#{ENV['PATH']}"
+        yield
+      ensure
+        ENV['PATH'] = old
+      end
+    end
+  end
+
   let(:test_directory) { File.join(File.dirname(__FILE__), '..', 'test') }
 
   let(:simple_database_path)  { File.join(test_directory, 'simple_database.yml') }
@@ -91,6 +106,15 @@ describe Phenix do
         create_databases(false)
         create_databases(false)
       end
+
+      it 'fails when mysql fails' do
+        with_bad_mysql do
+          expect { create_databases(false) }.to raise_error(
+            RuntimeError,
+            "Failed to execute CREATE DATABASE IF NOT EXISTS phenix_database_2"
+          )
+        end
+      end
     end
 
     describe :with_schema do
@@ -121,15 +145,15 @@ describe Phenix do
       Phenix.rise!(config_path: complex_database_path)
     end
 
+    after do
+      Phenix.burn!
+    end
+
     it 'creates the databases and adds the tables from the schema' do
       %i{database2 database3}.each do |name|
         ActiveRecord::Base.establish_connection(name)
         expect(ActiveRecord::Base.connection.send(exists_method, 'tests')).to be true
       end
-    end
-
-    after do
-      Phenix.burn!
     end
   end
 

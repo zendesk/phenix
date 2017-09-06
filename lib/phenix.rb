@@ -61,18 +61,20 @@ module Phenix
     end
   end
 
-  def run_mysql_command(conf, command)
-    @mysql_command ||= begin
-      commands = [
-        'mysql',
-        "--user=#{conf['username']}"
-      ]
-      commands << "--host=#{conf['host']}" if conf['host'].present?
-      commands << "--port=#{conf['port']}" if conf['port'].present?
-      commands << " --password=#{conf['password']} 2> /dev/null" if conf['password'].present?
-      commands.join(' ')
-    end
-    `echo "#{command}" | #{@mysql_command}`
+  def run_mysql_command(conf, execute)
+    command = ['mysql']
+    command << "--user" << conf['username'].to_s if conf['username'].present?
+    command << "--host" << conf['host'].to_s if conf['host'].present?
+    command << "--port" << conf['port'].to_s if conf['port'].present?
+    command << "--password" << conf['password'].to_s if conf['password'].present?
+    command << "--execute"
+    command << execute
+
+    pio = IO.popen(command, err: '/dev/null')
+    result = pio.read
+    pio.close
+    raise "Failed to execute #{execute}" unless $?.success?
+    result
   end
 
   extend self
