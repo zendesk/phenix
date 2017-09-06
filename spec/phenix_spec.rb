@@ -85,6 +85,11 @@ describe Phenix do
           expect(current_database).to eq(database)
         end
       end
+
+      it 'does not fail when databases already existed' do
+        create_databases(false)
+        create_databases(false)
+      end
     end
 
     describe :with_schema do
@@ -136,6 +141,10 @@ describe Phenix do
       Phenix.rise!
     end
 
+    after do
+      Phenix.burn!
+    end
+
     it 'uses the skip_database lamba when creating databases' do
       ActiveRecord::Base.establish_connection(:database2)
       current_database = ActiveRecord::Base.connection.select_value('select DATABASE()')
@@ -143,10 +152,6 @@ describe Phenix do
 
       ActiveRecord::Base.establish_connection(:database3)
       expect { ActiveRecord::Base.connection }.to raise_error(database_error)
-    end
-
-    after do
-      Phenix.burn!
     end
   end
 end

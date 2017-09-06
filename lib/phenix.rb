@@ -36,7 +36,7 @@ module Phenix
 
   def create_databases(with_schema)
     for_each_database do |name, conf|
-      run_mysql_command(conf, "CREATE DATABASE #{conf['database']}")
+      run_mysql_command(conf, "CREATE DATABASE IF NOT EXISTS #{conf['database']}")
       ActiveRecord::Base.establish_connection(name.to_sym)
       populate_database if with_schema
     end
