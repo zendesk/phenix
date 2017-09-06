@@ -13,13 +13,14 @@ describe Phenix do
   let(:exists_method)  { (ActiveRecord::VERSION::MAJOR < 5 ? :table_exists? : :data_source_exists?) }
   let(:database_error) { (ActiveRecord::VERSION::MAJOR < 4 ? Mysql2::Error : ActiveRecord::NoDatabaseError) }
 
+  before { Phenix.configure }
+
   it 'has a version number' do
     expect(Phenix::VERSION).not_to be nil
   end
 
   describe :configure do
     it 'sets default values' do
-      Phenix.configure
       expect(Phenix.database_config_path).to match(%r{/test/database.yml})
       expect(Phenix.schema_path)         .to match(%r{/test/schema.rb})
     end
