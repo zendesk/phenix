@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require 'spec_helper'
 require 'active_record'
+require 'tmpdir'
 
 SingleCov.covered!
 
