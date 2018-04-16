@@ -75,7 +75,7 @@ module Phenix
     command = ['mysql']
     CONFIG_TO_MYSQL_MAPPING.each do |c, m|
       if v = config[c].presence
-        command << "--#{m}" << v.to_s
+        command << "--#{m}=#{v}"
       end
     end
     command << "--execute"
