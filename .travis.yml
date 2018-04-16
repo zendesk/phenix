@@ -14,9 +14,3 @@ gemfile:
   - gemfiles/rails5.2.gemfile
 branches:
   only: master
-matrix:
-  exclude:
-    - rvm: 2.4
-      gemfile: gemfiles/rails3.2.gemfile
-    - rvm: 2.4
-      gemfile: gemfiles/rails4.2.gemfile
