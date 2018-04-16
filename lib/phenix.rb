@@ -74,8 +74,8 @@ module Phenix
   def run_mysql_command(config, execute)
     command = ['mysql']
     CONFIG_TO_MYSQL_MAPPING.each do |c, m|
-      if v = config[c].presence
-        command << "--#{m}=#{v}"
+      if config.key?(c)
+        command << "--#{m}=#{config.fetch(c)}"
       end
     end
     command << "--execute"
