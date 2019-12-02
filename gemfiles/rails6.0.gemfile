@@ -2,7 +2,6 @@ source 'https://rubygems.org'
 
 gemspec path: '../'
 
-gem 'activerecord', '~> 3.2.22'
-gem 'mysql2', '~> 0.3.20'
+gem 'activerecord', '~> 6.0.0'
 
 eval_gemfile 'common.rb'
