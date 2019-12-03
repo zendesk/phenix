@@ -2,15 +2,32 @@ sudo: false
 cache: bundler
 bundler_args: --no-deployment
 language: ruby
+services: mysql
 rvm:
-  - 2.2
-  - 2.3
   - 2.4
+  - 2.5
+  - 2.6
 gemfile:
-  - gemfiles/rails3.2.gemfile
   - gemfiles/rails4.2.gemfile
   - gemfiles/rails5.0.gemfile
   - gemfiles/rails5.1.gemfile
   - gemfiles/rails5.2.gemfile
+  - gemfiles/rails6.0.gemfile
 branches:
   only: master
+matrix:
+  exclude:
+    - rvm: 2.4
+      gemfile: gemfiles/rails6.0.gemfile
+    - rvm: 2.5
+      gemfile: gemfiles/rails4.2.gemfile
+    - rvm: 2.5
+      gemfile: gemfiles/rails5.0.gemfile
+    - rvm: 2.6
+      gemfile: gemfiles/rails4.2.gemfile
+    - rvm: 2.6
+      gemfile: gemfiles/rails5.0.gemfile
+    - rvm: 2.6
+      gemfile: gemfiles/rails5.1.gemfile
+    - rvm: 2.6
+      gemfile: gemfiles/rails5.2.gemfile

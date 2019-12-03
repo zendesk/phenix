@@ -29,7 +29,6 @@ describe Phenix do
   let(:complex_database_path) { File.join(test_directory, 'complex_database.yml') }
 
   let(:exists_method)  { (ActiveRecord::VERSION::MAJOR < 5 ? :table_exists? : :data_source_exists?) }
-  let(:database_error) { (ActiveRecord::VERSION::MAJOR < 4 ? Mysql2::Error : ActiveRecord::NoDatabaseError) }
 
   before { Phenix.configure }
 
@@ -94,7 +93,7 @@ describe Phenix do
 
       it 'creates the databases' do
         ActiveRecord::Base.establish_connection(:database2)
-        expect { ActiveRecord::Base.connection }.to raise_error(database_error)
+        expect { ActiveRecord::Base.connection }.to raise_error(ActiveRecord::NoDatabaseError)
 
         create_databases(false)
 
@@ -184,7 +183,7 @@ describe Phenix do
       expect(current_database).to eq('phenix_database_2')
 
       ActiveRecord::Base.establish_connection(:database3)
-      expect { ActiveRecord::Base.connection }.to raise_error(database_error)
+      expect { ActiveRecord::Base.connection }.to raise_error(ActiveRecord::NoDatabaseError)
     end
   end
 end
