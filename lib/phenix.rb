@@ -64,7 +64,18 @@ module Phenix
   end
 
   def for_each_database
-    ActiveRecord::Base.configurations.to_h.each do |name, conf|
+    configuration_hashes = if ActiveRecord::VERSION::STRING < '6.1'
+      ActiveRecord::Base.configurations.to_h
+    else
+      # We need to get all the configurations and put them back into a hash
+      # indexed by the env_name and with configuration_hash as the value.
+      ActiveRecord::Base.configurations
+        .configurations
+        .map { |c| [c.env_name, c.configuration_hash.with_indifferent_access] }
+        .to_h
+    end
+
+    configuration_hashes.each do |name, conf|
       next if conf['database'].nil?
       next if Phenix.skip_database.call(name, conf)
       yield(name, conf)
