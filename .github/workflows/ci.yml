@@ -1,0 +1,49 @@
+name: CI
+
+on: push
+
+jobs:
+  specs:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        options: >-
+          --health-cmd "mysql -uroot -e 'show databases'"
+          --health-interval 2s
+          --health-timeout 1s
+          --health-retries 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version:
+          - 2.7
+        gemfile:
+          - rails5.2
+          - rails6.0
+          - rails6.1
+        include:
+          - ruby-version: 2.5
+            gemfile: rails4.2
+          - ruby-version: 2.5
+            gemfile: rails5.0
+          - ruby-version: 2.5
+            gemfile: rails5.1
+    name: Ruby ${{ matrix.ruby-version }}, ${{ matrix.gemfile }}
+    env:
+      BUNDLE_GEMFILE: gemfiles/${{ matrix.gemfile }}.gemfile
+    steps:
+      - uses: zendesk/checkout@v2
+      - name: Set up Ruby
+        uses: zendesk/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+      - run: bundle install
+      - name: RSpec
+        run: bundle exec rspec

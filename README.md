@@ -44,7 +44,7 @@ Or install it yourself as:
 
 ## How do I run tests?
 
-`bundle exec rake wwtd:local`
+`bundle exec rspec`
 This will assume that your DB is accessible via localhost for root with no password.
 For a different configuration, you can use the MYSQL_URL environment variable (see test/complex_database.yml).
 
