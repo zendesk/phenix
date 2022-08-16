@@ -42,8 +42,14 @@ module Phenix
   private
 
   def create_databases(with_schema)
+    # Ensure we've created _every_ database before attempting to populte them
+    # This avoids ActiveRecord caching issues if the cache maintains references
+    # to stale databases
     for_each_database do |name, conf|
       run_mysql_command(conf, "CREATE DATABASE IF NOT EXISTS #{conf['database']}")
+    end
+
+    for_each_database do |name, conf|
       ActiveRecord::Base.establish_connection(conf)
       populate_database if with_schema
     end
