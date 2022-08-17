@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'spec_helper'
 require 'active_record'
 require 'tmpdir'
@@ -27,6 +28,7 @@ describe Phenix do
 
   let(:simple_database_path)  { File.join(test_directory, 'simple_database.yml') }
   let(:complex_database_path) { File.join(test_directory, 'complex_database.yml') }
+  let(:three_tier_database_path) { File.join(test_directory, 'three_tier_database.yml') }
 
   let(:exists_method)  { (ActiveRecord::VERSION::MAJOR < 5 ? :table_exists? : :data_source_exists?) }
 
@@ -50,6 +52,18 @@ describe Phenix do
 
       expect(Phenix.database_config_path).to eq('my/path/database.yml')
       expect(Phenix.schema_path)         .to eq('my/path/schema.rb')
+    end
+
+    if ActiveRecord::VERSION::STRING >= '6.1'
+      describe :three_tier_database_configs do
+        describe :parse_configuration_hashes do
+          it 'creates configuration_hashes for each database' do
+            load_database_config(three_tier_database_path)
+
+            expect(Phenix.send(:parse_configuration_hashes).length).to eq(ActiveRecord::Base.configurations.configurations.length)
+          end
+        end
+      end
     end
   end
 
