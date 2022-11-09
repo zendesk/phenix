@@ -4,7 +4,7 @@ require 'spec_helper'
 require 'active_record'
 require 'tmpdir'
 
-SingleCov.covered! uncovered: (ActiveRecord::VERSION::STRING < '6.1' ? 2 : 1)
+SingleCov.covered! uncovered: (ActiveRecord::VERSION::STRING < '6.1' ? 2 : 3)
 
 describe Phenix do
   include Phenix

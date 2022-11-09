@@ -36,7 +36,11 @@ module Phenix
   def load_database_config(config_path = Phenix.database_config_path)
     erb_config = IO.read(config_path)
     yaml_config = ERB.new(erb_config).result
-    ActiveRecord::Base.configurations = Phenix.current_configuration = YAML.load(yaml_config)
+    begin
+      ActiveRecord::Base.configurations = Phenix.current_configuration = YAML.load(yaml_config, aliases: true)
+    rescue ArgumentError
+      ActiveRecord::Base.configurations = Phenix.current_configuration = YAML.load(yaml_config)
+    end
   end
 
   private
