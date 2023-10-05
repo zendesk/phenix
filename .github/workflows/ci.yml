@@ -31,6 +31,7 @@ jobs:
           - rails6.0
           - rails6.1
           - rails7.0
+          - rails7.1
         include:
           - ruby-version: "2.5"
             gemfile: rails4.2
@@ -51,11 +52,11 @@ jobs:
     env:
       BUNDLE_GEMFILE: gemfiles/${{ matrix.gemfile }}.gemfile
     steps:
-      - uses: zendesk/checkout@v2
+      - uses: zendesk/checkout@v4
       - name: Set up Ruby
         uses: zendesk/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby-version }}
-      - run: bundle install
+          bundler-cache: true
       - name: RSpec
         run: bundle exec rspec
