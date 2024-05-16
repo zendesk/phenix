@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require 'phenix/version'
 require 'erb'
+require 'uri'
 
 module Phenix
   CONFIG_TO_MYSQL_MAPPING = {
