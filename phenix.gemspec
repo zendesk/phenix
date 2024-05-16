@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
 
   s.add_dependency 'bundler'
-  s.add_dependency 'activerecord', '>= 4.2', '< 7.2'
+  s.add_dependency 'activerecord', '>= 6.1'
 
   s.add_development_dependency 'rake', '>= 12.3.3'
   s.add_development_dependency 'rspec', '~> 3.4'
