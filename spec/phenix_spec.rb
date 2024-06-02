@@ -107,7 +107,7 @@ describe Phenix do
 
       it 'creates the databases' do
         ActiveRecord::Base.establish_connection(:database2)
-        expect { ActiveRecord::Base.connection }.to raise_error(ActiveRecord::NoDatabaseError)
+        expect { ActiveRecord::Base.connection.execute("SELECT 1") }.to raise_error(ActiveRecord::NoDatabaseError)
 
         create_databases(false)
 
@@ -197,7 +197,7 @@ describe Phenix do
       expect(current_database).to eq('phenix_database_2')
 
       ActiveRecord::Base.establish_connection(:database3)
-      expect { ActiveRecord::Base.connection }.to raise_error(ActiveRecord::NoDatabaseError)
+      expect { ActiveRecord::Base.connection.execute("SELECT 1") }.to raise_error(ActiveRecord::NoDatabaseError)
     end
   end
 end
