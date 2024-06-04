@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * *" # Run every day at 00:00 UTC
+  workflow_dispatch:
+
+jobs:
+  specs:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        options: >-
+          --health-cmd "mysql -uroot -e 'show databases'"
+          --health-interval 2s
+          --health-timeout 1s
+          --health-retries 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version:
+          - "3.1"
+          - "3.2"
+          - "3.3"
+        gemfile:
+          - rails_main
+    name: Ruby ${{ matrix.ruby-version }}, ${{ matrix.gemfile }}
+    env:
+      BUNDLE_GEMFILE: gemfiles/${{ matrix.gemfile }}.gemfile
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+      - name: RSpec
+        run: bundle exec rspec
+
+  specs_successful:
+    name: Rails Main specs passing?
+    needs: specs
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if ${{ needs.specs.result == 'success' }}
+          then
+            echo "All specs pass"
+          else
+            echo "Some specs failed"
+            false
+          fi
