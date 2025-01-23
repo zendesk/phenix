@@ -17,7 +17,7 @@ jobs:
           --health-cmd "mysql -uroot -e 'show databases'"
           --health-interval 2s
           --health-timeout 1s
-          --health-retries 10with
+          --health-retries 10
     strategy:
       fail-fast: false
       matrix:
@@ -31,7 +31,7 @@ jobs:
           - rails7.2
           - rails8.0
         exclude:
-          - {ruby: "3.4", gemfile: "rails7.0"}
+          - {ruby-version: "3.4", gemfile: "rails7.0"}
     name: Ruby ${{ matrix.ruby-version }}, ${{ matrix.gemfile }}
     env:
       BUNDLE_GEMFILE: gemfiles/${{ matrix.gemfile }}.gemfile
