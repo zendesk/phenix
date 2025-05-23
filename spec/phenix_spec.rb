@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'logger'
 require 'active_record'
 require 'tmpdir'
 
