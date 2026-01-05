@@ -25,18 +25,20 @@ jobs:
           - "3.2"
           - "3.3"
           - "3.4"
+          - "4.0"
         gemfile:
           - rails7.0
           - rails7.1
           - rails7.2
           - rails8.0
+          - rails8.1
         exclude:
           - {ruby-version: "3.4", gemfile: "rails7.0"}
     name: Ruby ${{ matrix.ruby-version }}, ${{ matrix.gemfile }}
     env:
       BUNDLE_GEMFILE: gemfiles/${{ matrix.gemfile }}.gemfile
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:

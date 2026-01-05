@@ -22,40 +22,14 @@ jobs:
           --health-interval 2s
           --health-timeout 1s
           --health-retries 10
-
-    strategy:
-      fail-fast: false
-      matrix:
-        ruby-version:
-          - "3.2"
-          - "3.3"
-          - "3.4"
-        gemfile:
-          - rails_main
-    name: Ruby ${{ matrix.ruby-version }}, ${{ matrix.gemfile }}
     env:
-      BUNDLE_GEMFILE: gemfiles/${{ matrix.gemfile }}.gemfile
+      BUNDLE_GEMFILE: gemfiles/rails_main.gemfile
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.ruby-version }}
+          ruby-version: "4.0"
           bundler-cache: true
       - name: RSpec
         run: bundle exec rspec
-
-  specs_successful:
-    name: Rails Main specs passing?
-    needs: specs
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          if ${{ needs.specs.result == 'success' }}
-          then
-            echo "All specs pass"
-          else
-            echo "Some specs failed"
-            false
-          fi
